@@ -1,16 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
-
 #include <locale.h>
-
 #include "include/glut.h"
 
-
-void mouseButton(int , int , int , int );
-//#include "dosya_Islemleri.c"
-//#include "render_Islemleri.c"
+void fareButon(int , int , int , int );
 
 int tik = 1;
 int tik2= 1;
@@ -20,7 +14,7 @@ float butonx=50, butony=50;
 char alinanKelime[100] = "";
 char turkceKelime[20] = "";
 char ingKelime[20] = "";
-char okYonu[] = "-->";
+char okYonu[3] = "-->";
 
 int kelimeArama(FILE *, FILE *, char [20], char [20], char [20], int , int *);
 void siralama(char [][20], int);
@@ -39,7 +33,7 @@ char dialog_ing_2[] = "'%s' kelimesinin Turkce karsiligi '%s' kelimesidir.";
 char hata_mesaji[] = "Aradiginiz Kelime Sozlukte Bulunmamaktadir!";
 
 int arananKelimeninYeri = 12;
-int lenght=0;
+int alinanKelimeUzunlugu=0;
 int durum = 1;
 int durum1 = 1;
 
@@ -54,8 +48,13 @@ void *font1 = GLUT_BITMAP_HELVETICA_12;
 #define INT_GLUT_BITMAP_HELVETICA_12  6
 #define INT_GLUT_BITMAP_HELVETICA_18  7
 
-FILE *sozluk, *turkce, *ingilizce;
+//Dosyalardaki imleçlerinin konumlarýný tutmak için deðiþkenler tanýmlandý
+//fpos_t konum, konumTr, konumIng;
 fpos_t konum, konumTr, konumIng;
+
+//Dosya degiskenlerinin tanimlanmasi
+//FILE *sozluk, *turkce, *ingilizce;
+FILE *sozluk, *turkce, *ingilizce;
 
 void renderBitmapString(float x, float y, float z, void *font, char *string)
 {
@@ -78,7 +77,6 @@ void renderBitmapString1(float x, float y, float z, void *font, char *string, ch
   int index = 0;
   
   glRasterPos3f(x, y,z);
-  
   
   for (c=string; *c != '\0'; c++)
   {
@@ -120,7 +118,6 @@ void renderBitmapString1(float x, float y, float z, void *font, char *string, ch
   		}
   		c +=2;
   	}
-  	
     glutBitmapCharacter(font, *c);
   }
 }
@@ -240,12 +237,13 @@ void klavyeIsleme(unsigned char key, int xx, int yy)
 	if (key == 27)
 		exit(0);
 	
-	lenght = strlen(alinanKelime);
+	alinanKelimeUzunlugu = strlen(alinanKelime);
 	
+	//Silme islemi -- Backspace
 	if(key == 8)
 	{
-		lenght-=1;
-		alinanKelime[lenght]=0;
+		alinanKelimeUzunlugu-=1;
+		alinanKelime[alinanKelimeUzunlugu]=0;
 	}
 	else
 	{
@@ -282,33 +280,20 @@ void klavyeIsleme(unsigned char key, int xx, int yy)
 					break;
 				}
 		}
-		alinanKelime[lenght]=key;
-    	lenght+=1;
+		alinanKelime[alinanKelimeUzunlugu]=key;
+    	alinanKelimeUzunlugu+=1;
 	}
 	aramaDurumu = 3;
 } 
 
-void mouseMove(int x, int y)
-{ 	
-
-         
-}
+void mouseMove(int x, int y) {}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void main(int argc, char **argv)
 {
-	//Dosyalardaki imleçlerinin konumlarýný tutmak için deðiþkenler tanýmlandý
-	//fpos_t konum, konumTr, konumIng;
-	
-	//Dosya degiskenlerinin tanimlanmasi
-	//FILE *sozluk, *turkce, *ingilizce;
-	
-	//Degiskenlere degerlere atilarak islemin yapilip yapilmadigiyla alakali kontroller
+	//Degiskenlere degerleri atilarak islemin yapilip yapilmadigiyla alakali kontroller
 	//ve kullaniciya geri bildirim
-	
-	
-	
 	if( (sozluk = fopen("sozluk.txt", "r") ) == NULL)
 	{
 		printf("sozluk.txt Açýlamadý! \n");
@@ -337,7 +322,6 @@ void main(int argc, char **argv)
 	
 	dosyaYazma(sozluk,  turkce,  ingilizce, siralanacakKelimeler,&konum, uzunluk);
 	
-	
 	//Dosyalar yazma modunda açýlmýþtý. O nedenle kapatýp tekrar okuma modunda açýyoruz
 	fclose(turkce);
 	fclose(ingilizce);
@@ -357,7 +341,6 @@ void main(int argc, char **argv)
 	fgetpos(ingilizce, &konumIng);
 	fgetpos(turkce, &konumTr);
 	
-	
 	// init GLUT and create window
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
@@ -376,7 +359,7 @@ void main(int argc, char **argv)
 	glutKeyboardFunc(klavyeIsleme);
 
 	// here are the two new functions
-	glutMouseFunc(mouseButton);
+	glutMouseFunc(fareButon);
 	glutMotionFunc(mouseMove);
 
 	// OpenGL init
@@ -385,8 +368,6 @@ void main(int argc, char **argv)
 	// enter GLUT event processing cycle
 	glutMainLoop();
 
-	//return 1;
-	
 	fclose(turkce);
 	fclose(ingilizce);
 	fclose(sozluk);
@@ -400,13 +381,13 @@ int dosyaOkuma(FILE *sozluk1, char siralanacakKelimeler[][20])
 	//Sozluk.txt icindeki kelimelerin ayrilmasi
 	char temp[20];
 	int okunanKelimeSayisi = 0;
-	int index2 = 0;
+	int index = 0;
 	
 	while( !feof( sozluk1 ))//Dosya sonuna gelinip gelinmediðin kontrolü
 	{
 		//Sadece türkçe kelimleri okumak için 0 dan baþladýðýmýzdan 2 nin katlarýnda okuma yaptýk
 		//böylece sadece türkçe kelimeleri okuduk
-		if( index2 % 2 == 0)
+		if( index % 2 == 0)
 		{
 			fscanf(sozluk1, "%s", siralanacakKelimeler[okunanKelimeSayisi]);
 			okunanKelimeSayisi++;
@@ -417,7 +398,7 @@ int dosyaOkuma(FILE *sozluk1, char siralanacakKelimeler[][20])
 			fscanf(sozluk1, "%s", temp);
 		}
 		
-		index2++;
+		index++;
 	}
 	
 	//Kaç kelime okunduðunu return ediyoruz
@@ -440,10 +421,8 @@ void degistir(char kelime1[20], char kelime2[20])
 //  http://tr.wikipedia.org/wiki/Kabarc%C4%B1k_s%C4%B1ralamas%C4%B1
 //  http://en.wikipedia.org/wiki/Bubble_sort
 
-
 void siralama(char kelimeler[][20], int uzunluk1)
 {
-	//int bekci1 = 1;
 	int index1;
 	int index2;
 	
@@ -457,21 +436,6 @@ void siralama(char kelimeler[][20], int uzunluk1)
 			}
 		}
 	}
-	/*
-	while(bekci1 == 1)
-	{
-		bekci1 = 0;
-		//Eðer ilk kelime daha büyükse degistir() ile ikisini yer deðiþtiriyoruz
-		if( strcmp( kelimeler[index1-1], kelimeler[index1] ) > 0 )
-		{
-			degistir(kelimeler[index1-1], kelimeler[index1]);
-			bekci1 = 1;//Eðer deðiþme yapýldýysa iþleme devam ediyoruz -- Deðiþtirme yapýlmadýysa bu kelimeden daha
-			//büyüðü olmadýðýný anlýyoruz ve iþlemi bitiriyoruz
-			printf("cHÝL\n");
-		}
-		
-		index1++;
-	}*/
 }
 
 void indexArama(FILE *sozluk2, char turkce[20], char ingKelime[20])
@@ -599,8 +563,8 @@ int kelimeArama(FILE *turkce3, FILE *ingilizce3, char trKelime[20], char ingKeli
 	}
 }
 
-void mouseButton(int button, int state, int x, int y) {
-
+void fareButon(int button, int state, int x, int y)
+{
 	// only start motion if the left button is pressed
 	if (button == GLUT_LEFT_BUTTON)
 	{
@@ -657,4 +621,3 @@ void mouseButton(int button, int state, int x, int y) {
 		
 	}
 }
-
