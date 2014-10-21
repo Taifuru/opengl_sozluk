@@ -4,6 +4,8 @@
 #include <locale.h>
 #include "include/glut.h"
 
+char isim[300];
+
 void fareButon(int , int , int , int );
 
 int tik = 1;
@@ -16,6 +18,8 @@ char turkceKelime[20] = "";
 char ingKelime[20] = "";
 char okYonu[3] = "-->";
 
+
+
 int kelimeArama(FILE *, FILE *, char [20], char [20], char [20], int , int *);
 void siralama(char [][20], int);
 int dosyaOkuma(FILE *, char [][20]);
@@ -24,13 +28,13 @@ void degistir(char [], char []);
 
 char siralanacakKelimeler[100][20];
 
-char dialog_tr_1[] = "turkce.txt dosyasinda aradiginiz '%s' kelimesi %d. kelimedir.";
-char dialog_tr_2[] = "'%s' kelimesinin Ingilizce karsiligi '%s' kelimesidir.";
+char dialog_tr_1[] = "turkce.txt dosyasýnda aradýðýnýz '%s' kelimesi %d. kelimedir.";
+char dialog_tr_2[] = "'%s' kelimesinin Ýngilizce karþýlýðý '%s' kelimesidir.";
 
-char dialog_ing_1[] = "ingilizce.txt dosyasinda aradiginiz '%s' kelimesi %d. kelimedir.";
-char dialog_ing_2[] = "'%s' kelimesinin Turkce karsiligi '%s' kelimesidir.";
+char dialog_ing_1[] = "ingilizce.txt dosyasýnda aradýðýnýz '%s' kelimesi %d. kelimedir.";
+char dialog_ing_2[] = "'%s' kelimesinin Türkçe karþýlýðý '%s' kelimesidir.";
 
-char hata_mesaji[] = "Aradiginiz Kelime Sozlukte Bulunmamaktadir!";
+char hata_mesaji[] = "Aradýðýnýz Kelime Sözlükte Bulunmamaktadýr!";
 
 int arananKelimeninYeri = 12;
 int alinanKelimeUzunlugu=0;
@@ -56,9 +60,9 @@ fpos_t konum, konumTr, konumIng;
 //FILE *sozluk, *turkce, *ingilizce;
 FILE *sozluk, *turkce, *ingilizce;
 
-void renderBitmapString(float x, float y, float z, void *font, char *string)
+void renderBitmapString(float x, float y, float z, void *font, unsigned char *string)
 {
-  char *c;
+  unsigned char *c;
   
   glRasterPos3f(x, y,z);
   
@@ -68,10 +72,10 @@ void renderBitmapString(float x, float y, float z, void *font, char *string)
   }
 }
 
-void renderBitmapString1(float x, float y, float z, void *font, char *string, char *kelime1, char *kelime2, int yer)
+void renderBitmapString1(float x, float y, float z, void *font, unsigned char *string, unsigned char *kelime1, unsigned char *kelime2, int yer)
 {
-  char *karakter;
-  char *kelime;
+  unsigned char *karakter;
+  unsigned char *kelime;
   char sayi[3];
   int index = 0;
   
@@ -195,8 +199,8 @@ void ekranaCizim(void)
 	
 	glPushMatrix();
 		glColor3f(1.0f, 0.f, 0.f);
-		renderBitmapString(butonx+10, butony+30, 0.0f, (void *)font ,"Turkce");
-		renderBitmapString(butonx+210, butony+30, 0.0f, (void *)font ,"Ingilizce");
+		renderBitmapString(butonx+10, butony+30, 0.0f, (void *)font ,"Türkçe");
+		renderBitmapString(butonx+210, butony+30, 0.0f, (void *)font ,"Ýngilizce");
 		renderBitmapString(butonx+135, butony+30, 0.0f, (void *)font , okYonu);
 		renderBitmapString(butonx+10, butony+75, 0.0f, (void *)font1 ,"Aranacak Kelimeyi Giriniz : ");
 		
@@ -227,6 +231,7 @@ void ekranaCizim(void)
 		else if(aramaDurumu == 3)
 		{
 			
+			renderBitmapString(15,300, 0.0f, (void *)font1, isim);
 		}
 		
 	glPopMatrix();
@@ -234,7 +239,7 @@ void ekranaCizim(void)
     glutSwapBuffers();
 } 
 
-void klavyeIsleme(unsigned char key, int xx, int yy)
+void klavyeIsleme(char key, int xx, int yy)
 { 	
 	//esc basilinca programdan cikiyor
 	if (key == 27)
@@ -252,16 +257,17 @@ void klavyeIsleme(unsigned char key, int xx, int yy)
 	else
 	{
 		alinanKelime[1][alinanKelimeUzunlugu] = key;
-		
+		/*
 		switch(key)
 		{
-			case 253 : { key = 105; break; }
-			case 246 : { key = 11; break; }
-			case 240 : { key = 103; break; }
-			case 252 : { key = 117; break; }
-			case 254 : { key = 115; break; }
-			case 231 : { key = 99; break; }
+			case -3 : { key = 105; break; } // ý-i
+			case -10 : { key = 111; break; } // ö-o
+			case -16 : { key = 103; break; } // ð-g
+			case -4 : { key = 117; break; } // ü-u
+			case -2 : { key = 115; break; } // þ-s
+			case -25 : { key = 99; break; } //ç-c
 		}
+		*/
 		alinanKelime[0][alinanKelimeUzunlugu] = key;
     	alinanKelimeUzunlugu+=1;
 	}
@@ -274,6 +280,13 @@ void mouseMove(int x, int y) {}
 
 void main(int argc, char **argv)
 {
+	int i;
+	for(i=0;i<256;i++)
+	{
+		isim[i] = i;
+	}
+	setlocale(LC_ALL, "Turkish");
+	
 	//Degiskenlere degerleri atilarak islemin yapilip yapilmadigiyla alakali kontroller
 	//ve kullaniciya geri bildirim
 	if( (sozluk = fopen("sozluk.txt", "r") ) == NULL)
@@ -492,14 +505,14 @@ int kelimeArama(FILE *turkce3, FILE *ingilizce3, char trKelime[20], char ingKeli
 					{
 						for(index2 = 0; index2 < strlen(trKelime); index2++)
 						{
-							switch(( unsigned char )trKelime[index2])
+							switch(trKelime[index2])
 							{
-								case 253 : { trKelime[index2] = 105; break; }
-								case 246 : { trKelime[index2] = 11; break; }
-								case 240 : { trKelime[index2] = 103; break; }
-								case 252 : { trKelime[index2] = 117; break; }
-								case 254 : { trKelime[index2] = 115; break; }
-								case 231 : { trKelime[index2] = 99; break; }
+								case -3 : { trKelime[index2] = 105; break; } // ý-i
+								case -10 : { trKelime[index2] = 111; break; } // ö-o
+								case -16 : { trKelime[index2] = 103; break; } // ð-g
+								case -4 : { trKelime[index2] = 117; break; } // ü-u
+								case -2 : { trKelime[index2] = 115; break; } // þ-s
+								case -25 : { trKelime[index2] = 99; break; } //ç-c
 							}
 						}
 						
@@ -532,14 +545,14 @@ int kelimeArama(FILE *turkce3, FILE *ingilizce3, char trKelime[20], char ingKeli
 					{
 						for(index2 = 0; index2 < strlen(trKelime); index2++)
 						{
-							switch(( unsigned char )trKelime[index2])
+							switch(trKelime[index2])
 							{
-								case 253 : { trKelime[index2] = 105; break; }
-								case 246 : { trKelime[index2] = 11; break; }
-								case 240 : { trKelime[index2] = 103; break; }
-								case 252 : { trKelime[index2] = 117; break; }
-								case 254 : { trKelime[index2] = 115; break; }
-								case 231 : { trKelime[index2] = 99; break; }
+								case -3 : { trKelime[index2] = 105; break; } // ý-i
+								case -10 : { trKelime[index2] = 111; break; } // ö-o
+								case -16 : { trKelime[index2] = 103; break; } // ð-g
+								case -4 : { trKelime[index2] = 117; break; } // ü-u
+								case -2 : { trKelime[index2] = 115; break; } // þ-s
+								case -25 : { trKelime[index2] = 99; break; } //ç-c
 							}
 						}
 						
@@ -618,7 +631,6 @@ void fareButon(int button, int state, int x, int y)
 					fsetpos(ingilizce,&konumIng);
 					aramaDurumu = kelimeArama(turkce,ingilizce, turkceKelime, ingKelime, alinanKelime[1], 2, &arananKelimeninYeri);
 				}
-				
 			}
 			tik2 = 0;
 		}

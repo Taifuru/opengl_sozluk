@@ -561,7 +561,8 @@ GLUTAPI void APIENTRY glutDetachMenu(int button);
 /* GLUT window callback sub-API. */
 GLUTAPI void APIENTRY glutDisplayFunc(void (GLUTCALLBACK *func)(void));
 GLUTAPI void APIENTRY glutReshapeFunc(void (GLUTCALLBACK *func)(int width, int height));
-GLUTAPI void APIENTRY glutKeyboardFunc(void (GLUTCALLBACK *func)(unsigned char key, int x, int y));
+GLUTAPI void APIENTRY glutKeyboardFunc(void (GLUTCALLBACK *func)(char key, int x, int y));
+//GLUTAPI void APIENTRY glutKeyboardFunc(void (GLUTCALLBACK *func)(unsigned char key, int x, int y));
 GLUTAPI void APIENTRY glutMouseFunc(void (GLUTCALLBACK *func)(int button, int state, int x, int y));
 GLUTAPI void APIENTRY glutMotionFunc(void (GLUTCALLBACK *func)(int x, int y));
 GLUTAPI void APIENTRY glutPassiveMotionFunc(void (GLUTCALLBACK *func)(int x, int y));
