@@ -11,7 +11,7 @@ int tik2= 1;
 
 float butonx=50, butony=50;
 //klavyeden alýnan string
-char alinanKelime[100] = "";
+char alinanKelime[2][20] ;
 char turkceKelime[20] = "";
 char ingKelime[20] = "";
 char okYonu[3] = "-->";
@@ -70,55 +70,56 @@ void renderBitmapString(float x, float y, float z, void *font, char *string)
 
 void renderBitmapString1(float x, float y, float z, void *font, char *string, char *kelime1, char *kelime2, int yer)
 {
-  char *c;
-  char *d;
-  char e[3];
-  char text[32];
+  char *karakter;
+  char *kelime;
+  char sayi[3];
   int index = 0;
   
   glRasterPos3f(x, y,z);
   
-  for (c=string; *c != '\0'; c++)
+  for (karakter=string; *karakter != '\0'; karakter++)
   {
-  	if (*c == '%' && *(c+1) == 's')
+  	if (*karakter == '%' && *(karakter + 1) == 's')
   	{
-  		if(index%2==0)
-  			d=kelime1;
-  		else
-  			d=kelime2;
+  		//if else yapisinin kisasi
+  		(index % 2 == 0) ? (kelime = kelime1) : (kelime = kelime2);
   		
-  		for( ; *d != '\0'; d++)
-  			glutBitmapCharacter(font, *d);
-  		c +=2;
+  		for( ; *kelime != '\0'; kelime++)
+  		{
+		  glutBitmapCharacter(font, *kelime);
+  		}
+  		// %s iki karakter olduðu için iki adres atliyoruz
+  		karakter +=2;
   		index++;
   	}
-  	else if(*c == '%' && *(c+1) == 'd')
+  	else if(*karakter == '%' && *(karakter + 1) == 'd')
   	{
-  		e[0] = '0' + yer/100;
-  		e[1] = '0' + ( yer - ( (yer/100) * 100) ) / 10;
-  		e[2] = '0' + yer%10;
+  		sayi[0] = '0' + yer / 100;
+  		sayi[1] = '0' + ( yer - ( (yer / 100) * 100) ) / 10;
+  		sayi[2] = '0' + yer % 10;
   		
-  		if(e[0]== '0')
+  		if(sayi[0]== '0')
   		{
-  			if( e[1]=='0')
+  			if( sayi[1]=='0')
   			{
-  				glutBitmapCharacter(font, e[2]);
+  				glutBitmapCharacter(font, sayi[2]);
   			}
   			else
   			{
-  				glutBitmapCharacter(font, e[1]);
-  				glutBitmapCharacter(font, e[2]);
+  				glutBitmapCharacter(font, sayi[1]);
+  				glutBitmapCharacter(font, sayi[2]);
   			}
   		}
   		else
   		{
-  			glutBitmapCharacter(font, e[0]);
-  			glutBitmapCharacter(font, e[1]);
-  			glutBitmapCharacter(font, e[2]);
+  			glutBitmapCharacter(font, sayi[0]);
+  			glutBitmapCharacter(font, sayi[1]);
+  			glutBitmapCharacter(font, sayi[2]);
   		}
-  		c +=2;
+  		//%d iki karakter olduðu için iki adres atliyoruz
+  		karakter +=2;
   	}
-    glutBitmapCharacter(font, *c);
+    glutBitmapCharacter(font, *karakter);
   }
 }
 
@@ -200,24 +201,26 @@ void ekranaCizim(void)
 		renderBitmapString(butonx+10, butony+75, 0.0f, (void *)font1 ,"Aranacak Kelimeyi Giriniz : ");
 		
 		glColor3f(1.0f, 0.f, 0.f);
-		renderBitmapString(butonx+170, butony+75, 0.0f, (void *)font1 , alinanKelime);
+		renderBitmapString(butonx+170, butony+75, 0.0f, (void *)font1 , alinanKelime[0]);
 		
 		glColor3f(0.0f, 0.f, 1.f);
 		renderBitmapString(butonx+10, butony+130, 0.0f, (void *)font , "Bul");
 		
 		glColor3f(1.0f, 1.f, 1.f);
 		
-		if(aramaDurumu == 0 && alinanKelime[0] != '\0')
+		if(aramaDurumu == 0 && alinanKelime[0][0] != '\0')
 		{
+			//Turkce - Ing arama sonucunu ekrana yazdirma
 			renderBitmapString1(butonx+60, butony+120, 0.0f, (void *)font1 , dialog_tr_1, turkceKelime, ingKelime, arananKelimeninYeri);
 			renderBitmapString1(butonx+60, butony+135, 0.0f, (void *)font1 , dialog_tr_2, turkceKelime, ingKelime, arananKelimeninYeri);
 		}
-		else if(aramaDurumu == 1 && alinanKelime[0] != '\0')
+		else if(aramaDurumu == 1 && alinanKelime[0][0] != '\0')
 		{
+			//Ing - Turkce arama sonucunu ekrana yazdirma
 			renderBitmapString1(butonx+60, butony+120, 0.0f, (void *)font1 , dialog_ing_1, ingKelime, turkceKelime, arananKelimeninYeri);
 			renderBitmapString1(butonx+60, butony+135, 0.0f, (void *)font1 , dialog_ing_2, ingKelime, turkceKelime, arananKelimeninYeri);
 		}
-		else if(aramaDurumu == 2 && alinanKelime[0] != '\0')
+		else if(aramaDurumu == 2 && alinanKelime[0][0] != '\0')
 		{
 			renderBitmapString(butonx+60, butony+120, 0.0f, (void *)font1 ,hata_mesaji);
 		}
@@ -237,54 +240,33 @@ void klavyeIsleme(unsigned char key, int xx, int yy)
 	if (key == 27)
 		exit(0);
 	
-	alinanKelimeUzunlugu = strlen(alinanKelime);
+	alinanKelimeUzunlugu = strlen(alinanKelime[0]);
 	
 	//Silme islemi -- Backspace
 	if(key == 8)
 	{
-		alinanKelimeUzunlugu-=1;
-		alinanKelime[alinanKelimeUzunlugu]=0;
+		alinanKelimeUzunlugu -= 1;
+		alinanKelime[0][alinanKelimeUzunlugu] = 0;
+		alinanKelime[1][alinanKelimeUzunlugu] = 0;
 	}
 	else
 	{
+		alinanKelime[1][alinanKelimeUzunlugu] = key;
+		
 		switch(key)
 		{
-			case 253 :
-				{
-					key = 105;
-					break;
-				}
-			case 246 :
-				{
-					key = 11;
-					break;
-				}
-			case 240 :
-				{
-					key = 103;
-					break;
-				}
-			case 252 :
-				{
-					key = 117;
-					break;
-				}
-			case 254 :
-				{
-					key = 115;
-					break;
-				}
-			case 231 :
-				{
-					key = 99;
-					break;
-				}
+			case 253 : { key = 105; break; }
+			case 246 : { key = 11; break; }
+			case 240 : { key = 103; break; }
+			case 252 : { key = 117; break; }
+			case 254 : { key = 115; break; }
+			case 231 : { key = 99; break; }
 		}
-		alinanKelime[alinanKelimeUzunlugu]=key;
+		alinanKelime[0][alinanKelimeUzunlugu] = key;
     	alinanKelimeUzunlugu+=1;
 	}
 	aramaDurumu = 3;
-} 
+}
 
 void mouseMove(int x, int y) {}
 
@@ -493,6 +475,7 @@ int kelimeArama(FILE *turkce3, FILE *ingilizce3, char trKelime[20], char ingKeli
 {
 	int index = 1;
 	*yer = 0;
+	int index2 = 0;
 	
 	switch(secim)
 	{
@@ -507,6 +490,18 @@ int kelimeArama(FILE *turkce3, FILE *ingilizce3, char trKelime[20], char ingKeli
 					
 					if( strcasecmp(trKelime, aranan) == 0 )
 					{
+						for(index2 = 0; index2 < strlen(trKelime); index2++)
+						{
+							switch(( unsigned char )trKelime[index2])
+							{
+								case 253 : { trKelime[index2] = 105; break; }
+								case 246 : { trKelime[index2] = 11; break; }
+								case 240 : { trKelime[index2] = 103; break; }
+								case 252 : { trKelime[index2] = 117; break; }
+								case 254 : { trKelime[index2] = 115; break; }
+								case 231 : { trKelime[index2] = 99; break; }
+							}
+						}
 						
 						printf("turkce.txt dosyasýnda aradýðýnýz %s kelimesi %d. kelimedir.\n", trKelime, index);
 						printf("%s kelimesinin Ýngilizce karþýlýðý %s kelimesidir.\n\n\n", trKelime, ingKelime);
@@ -535,6 +530,19 @@ int kelimeArama(FILE *turkce3, FILE *ingilizce3, char trKelime[20], char ingKeli
 					
 					if( strcasecmp(ingKelime, aranan) == 0 )
 					{
+						for(index2 = 0; index2 < strlen(trKelime); index2++)
+						{
+							switch(( unsigned char )trKelime[index2])
+							{
+								case 253 : { trKelime[index2] = 105; break; }
+								case 246 : { trKelime[index2] = 11; break; }
+								case 240 : { trKelime[index2] = 103; break; }
+								case 252 : { trKelime[index2] = 117; break; }
+								case 254 : { trKelime[index2] = 115; break; }
+								case 231 : { trKelime[index2] = 99; break; }
+							}
+						}
+						
 						printf("ingilizce.txt dosyasýnda aradýðýnýz %s kelimesi %d. kelimedir.\n", ingKelime, index);
 						printf("%s kelimesinin Türkçe karþýlýðý %s kelimesidir.\n\n\n", ingKelime, trKelime);
 						break;
@@ -599,7 +607,7 @@ void fareButon(int button, int state, int x, int y)
 				{
 					fsetpos(turkce,&konumTr);
 					fsetpos(ingilizce,&konumIng);
-					aramaDurumu = kelimeArama(turkce,ingilizce, turkceKelime, ingKelime, alinanKelime, 1, &arananKelimeninYeri);
+					aramaDurumu = kelimeArama(turkce,ingilizce, turkceKelime, ingKelime, alinanKelime[1], 1, &arananKelimeninYeri);
 				}
 			}
 			else if( durum == 0)//Ingilizce - Turkce
@@ -608,7 +616,7 @@ void fareButon(int button, int state, int x, int y)
 				{
 					fsetpos(turkce,&konumTr);
 					fsetpos(ingilizce,&konumIng);
-					aramaDurumu = kelimeArama(turkce,ingilizce, turkceKelime, ingKelime, alinanKelime, 2, &arananKelimeninYeri);
+					aramaDurumu = kelimeArama(turkce,ingilizce, turkceKelime, ingKelime, alinanKelime[1], 2, &arananKelimeninYeri);
 				}
 				
 			}
